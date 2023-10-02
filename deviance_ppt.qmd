@@ -1,0 +1,205 @@
+---
+title: "Deviance in nutshell (R)"
+author: "Lam (Serosv)"
+format: revealjs
+editor: visual
+css: style.css
+---
+
+## NULL-deviance and RESIDUAL-deviance? {.smaller}
+
+. . .
+
+We will have some questions:
+
+. . .
+
+-   What is deviance?
+
+. . .
+
+-   Null deviance?
+
+. . .
+
+-   Residual deviance?
+
+. . .
+
+-   Some examples?
+
+## What is deviance? {.smaller}
+
+. . .
+
+-   In statistics, deviance is a concept in GLM that measures the fitted GLM with respect to a perfect model known as the saturated model.
+
+. . .
+
+-   More precisely, the deviance is defined as the difference of likelihoods between the fitted model and the saturated model.
+
+. . .
+
+$D = -2LL(\hat{\beta)} + 2LL(mod)$ where $mod = saturated \space model$.
+
+. . .
+
+-   It is often used in statistical hypothesis testing and plays a crucial role in exponential dispersion models and GLMs.
+
+. . .
+
+-   The deviance is always larger or equal to zero because since the likelihood of the saturated model is exactly one, the deviance is simply another expression of the likelihood. Where zero will likely occur if the model is a perfect fit.
+
+## 
+
+![Figure 1. A saturated model ](saturated-1.png){style="color: red;" fig-align="center" width="500"}
+
+## Null deviance {.smaller}
+
+-   The null deviance is a generalization of the total sum of squares of the linear model.
+-   It shows how well the model predicts the response variable with only the intercept.
+
+. . .
+
+**How can we use the null deviance?**
+
+. . .
+
+The degree of freedom becomes very important here, it involves number of observations -- number of predictors. The size of the null deviance can determine how well the model explains the data.
+
+. . .
+
+For example, if the null deviance is very small, it most likely means the model is doing well explaining the data.
+
+. . .
+
+The null deviance helps us to understand if additional independent variables are needed based on the degree of freedom and serves for comparing how much the model has improved by adding the predictors or independent variables.
+
+##  {.smaller}
+
+A benchmark for evaluating the magnitude of the deviance is the null deviance,
+
+. . .
+
+$$ D_0 = - 2LL(\hat{\beta_0)} $$
+
+. . .
+
+which is the deviance of the worst model, the one fitted without any predictor, to the perfect model:
+
+. . .
+
+$$ Y|(X_1 = x_1,...,X_k = x_k) \sim Ber(logistic(\beta_0)) $$
+
+. . .
+
+In this case, $\hat{\beta}_0 = logit (\frac{m}{n}) = log(\frac{\frac{m}{n}}{1 - \frac{m}{n}})$ where $m$ is the number of $1$'s in $Y_1,...,Y_n$.
+
+. . .
+
+The null deviance serves for **comparing how much the model has improved by adding the predictors** $X_1,…,X_k$**.**
+
+##  {.smaller}
+
+. . .
+
+This can be done by means of the $R^2$ statistic, which is a generalization of the determination coefficient in multiple linear regression:
+
+. . .
+
+$$ R^2 = 1 - \frac{D}{D_0} = 1 - \frac{deviance(fitted \space logistic, \space saturated \space model)}{deviance(null \space model, \space saturated \space model)} $$
+
+. . .
+
+This global measure of fit shares some important properties with the determination coefficient in linear regression:
+
+. . .
+
+1.  It is a quantity between $0$ and $1$.
+2.  If the fit is perfect, then $D= 0$ and $R^2 = 1$. If the predictors do not add anything to the regression, then $D = D_0$ and $R^2 = 0$.
+
+## Residual deviance {.smaller}
+
+-   The residual deviance shows how well the response is predicted by the model when the predictors are included.
+
+. . .
+
+-   This increase in deviance is evidence of a significant lack of fit.
+
+. . .
+
+-   We can also use the residual deviance to test whether the null hypothesis is true (i.e. Logistic regression model provides an adequate fit for the data). This is possible because the deviance is given by the chi-squared value at a certain degrees of freedom. In order to test for significance, we can find out associated p-values using the below formula in R:
+
+. . .
+
+```{r}
+print("p-value = 1 - pchisq(deviance, df)")
+```
+
+. . .
+
+Using the above values of residual deviance and DF, you get a p-value of approximately zero showing that there is a significant lack of evidence to support the null hypothesis.
+
+## Example {.smaller}
+
+. . .
+
+```{r}
+data(mtcars)
+model1<-glm(vs ~ wt + disp, data = mtcars, family = binomial)
+summary(model1)
+```
+
+## Let's find out what's behind the result!  {.smaller}
+
+. . .
+
+-   AIC aka Akaike Information Criterion (27.4): Evaluate how well a model fits the data. A lower score indicates a better model.
+
+. . .
+
+-   Null deviance (43.86) on 31 dfs.
+
+. . .
+
+-   Residual (21.40) on 29 dfs.
+
+. . .
+
+Next, use [calculator](https://www.gigacalculator.com/calculators/chi-square-to-p-value-calculator.php#:~:text=Simply%20enter%20the%20Chi-Square%20statistic%20you%20obtained%20and,%28cumulative%20probability%20density%20function%20of%20the%20chi-square%20distribution%29.) to calculate the p-value for hypothesis testing.
+
+## Summary  {.smaller}
+
+. . .
+
+Null Deviance = $2(LL(Saturated \space Model) - LL(Null \space Model))$ on $df = df_{Sat} - df_{Null}$
+
+. . .
+
+Residual Deviance = $2(LL(Saturated \space Model) - LL(Proposed \space Model))$ on $df = df_{Sat} - df_{Proposed}$
+
+. . .
+
+The **Saturated Model** is a model that assumes each data point has its own parameters (which means you have n parameters to estimate).
+
+. . .
+
+The **Null Model** assumes the exact "opposite", in that it assumes one parameter for all of the data points, which means you only estimate 1 parameter.
+
+. . .
+
+The **Proposed Model** assumes you can explain your data points with p parameters + an intercept term, so you have p+1 parameters.
+
+. . .
+
+If your **Null Deviance** is really small, it means that the Null Model explains the data pretty well. Likewise with your **Residual Deviance**.
+
+## Do you want to know more about residual deviance? {style="text-align: center; color: red;"}
+
+. . .
+
+Yeehaa but not today! See you next time!
+
+. . .
+
+Thank you for listening!
