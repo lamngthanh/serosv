@@ -1,0 +1,236 @@
+---
+title: "Local Regression - GAM"
+author: "Lam (MathModpedia)"
+format: revealjs
+editor: visual
+---
+
+# Local Regression {.smaller}
+
+##  {.smaller}
+
+-   The idea behind local regression is to fit the small localized regions of the predictor using only a nearby subset of the data.
+
+. . .
+
+-   Local regression is a different approach for fitting flexible non-linear functions, which involves computing the fit at a target point $x_0$ using only the nearby training observations.
+
+. . .
+
+::: {#fig-gams layout-ncol="2"}
+![Trevor](Trevor.jpg){width="232"}
+
+![Robert](Robert.jpg){width="202"}
+
+Let's meet GAM's parents
+:::
+
+##  {.smaller}
+
+![](Untitled.png){fig-align="center" width="600"}
+
+. . .
+
+where **the blue curve** represents $f(x)$ from which the data were generated, and **the light orange curve** corresponds to the local regression estimate $\hat{f}(x)$. **The orange colored points** are local to the target point $x_0$, represented by the orange vertical line.
+
+##  {.smaller}
+
+### Left figure
+
+![](Left.png){fig-align="center" width="350"}
+
+-   In this figure, the local regression method is trying to make a prediction at about x = 0.05.
+
+-   Orange points contribute to the fit, and gray points are left out.
+
+##  {.smaller}
+
+### Right figure
+
+![](Right.png){fig-align="center" width="350"}
+
+-   Dark orange points are used to find a line of best fit in this small region.
+
+-   Shaded distribution is a weighting scheme.
+
+##  {.smaller}
+
+### Span as known as bandwidth h
+
+![](Span.png){fig-align="center" width="350"}
+
+The span = 0.7 means that 70% of the data are used for each local fit. In contrast with a small span, only very close data points determine the estimate, so the estimated function is a bit noisier.
+
+##  {.smaller}
+
+There are a number of choices that arise in local regression to tailor the smooth:
+
+. . .
+
+-   **Choice 1: Type of model**
+
+. . .
+
+Linear regression: $p=1$
+
+. . .
+
+Quadratic: $p=2$
+
+. . .
+
+Tricube: $p=3$
+
+. . .
+
+-   **Choice 2: Weighting scheme**
+
+. . .
+
+Normal density
+
+. . .
+
+Other schemes (called kernels): high weight for nearby and low weight to far away points
+
+. . .
+
+-   **Choice 3: Span size also known as bandwidth h (most important choice)**
+
+. . .
+
+Large span: very smooth estimate
+
+. . .
+
+Small span: very noisy estimate
+
+. . .
+
+Bias-variance
+
+##  {.smaller}
+
+**Algorithm 7.1** Local Regression At X = $x_0$
+
+. . .
+
+1.  Gather the fraction $s = k/n$ of training points whose $x_i$ are closest to $x_0$.
+
+. . .
+
+2.  Assign a weight $K_{i0} = K(x_i , x_0)$ to each point in this neighborhood, so that the point furthest from $x_0$ has weight zero, and the closest has the highest weight. All but these $k$ nearest neighbors get weight zero.
+
+. . .
+
+3.  Fit a ***weight least squares regression*** of the $y_i$ on the $x_i$ using the aforementioned weights, by finding $\hat{\beta}_0$ and $\hat{\beta}_1$ that minimize $\sum_{i = 1}^{n} K_{i0}(y_i - \beta_0 - \beta_1 x_i)^2$.
+
+. . .
+
+4.  The fitted value at $x_0$ is given by $\hat{f}(x_0) = \hat{\beta}_0 + \hat{\beta}_1x_0$.
+
+# Generalized Additive Models {.smaller}
+
+##  {.smaller}
+
+![](Span2.png){fig-align="center" width="394"}
+
+. . .
+
+-   Generalized additive models (GAMs) provide a general framework for extending a standard linear model by **allowing non-linear functions** of each of the variables while maintaining additivity.
+
+. . .
+
+-   Just like linear models, GAMs can **be applied with both** quantitative and qualitative responses.
+
+##  {.smaller}
+
+-   A natural way to extend the multiple linear regression model
+
+. . .
+
+$$
+y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + … + \beta_p x_{ip} + \epsilon_i
+$$
+
+. . .
+
+-   In order to allow for non-linear relationships between each feature and the response is to replace each linear component $\beta_j x_{ij}$ with a (smooth) non-linear function $f_j(x_{ij})$.
+
+. . .
+
+-   We would then write the model as:
+
+. . .
+
+$$
+y_i = \beta_0 + \sum_{j=1}^{p} f_j (x_{ij}) + \epsilon_i
+$$
+
+. . .
+
+-   This is an example of a GAM. It is called an additive model because we calculate a separate $f_j$ for each $X_j$ , and then add together all of their contributions
+
+##  {.smaller}
+
+![](Fig11.png)
+
+## Fit a GAM {.smaller}
+
+-   Natural splines
+
+. . .
+
+$$
+lm(wage \sim ns(year,~ df = 5) ~ + ~ ns(age, ~ df = 5) ~ + ~ education)
+$$
+
+. . .
+
+-   Coefficients not that interesting; fitted functions are. The previous plot was produced using $plot.gam$.
+
+. . .
+
+-   Can mix terms - some linear, some nonlinear - and use $anova()$ to compare models.
+
+. . .
+
+-   Can use smoothing splines or local regression as well:
+
+. . .
+
+$$
+gam(wage \sim s(year, ~ df = 5) ~ + ~ lo(age, ~ span = .5) ~ + ~ education)
+$$
+
+## {.smaller}
+
+![](Fig12.png){fig-align="center"}
+
+## Pros and Cons {.smaller}
+
+### Pros
+
+-   GAMs **allow** us **to fit a non-linear** $f_j$ **to each** $X_j$, so that we can automatically model non-linear relationships that standard linear regression will miss.
+
+-   The **non-linear** fits can **potentially** make **more accurate predictions** for the response $Y$.
+
+-   We can **examine the effect of each** $X_j$ **on** $Y$ individually while holding all of the other variables fixed.
+
+-   The smoothness of the function $f_j$ for the variable $X_j$ can be summarized via degrees of freedom.
+
+### Cons
+
+-   The main limitation of GAMs is that the model is restricted to be additive. With many variables, important interactions can be missed.
+
+## GAM for Classification {.smaller}
+
+$$
+\log(\frac{p(X)}{1 - p(X)}) = \beta_0 + f_1(X_1) + f_2(X_2) +...+ f_p(X_p)
+$$
+
+![](gamclass.png){fig-align="center"}
+
+$gam(I(wage >250) \sim year + s(age, df =5) + education, family = binomial)$
+
+# Thank you for listening!
